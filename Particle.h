@@ -6,17 +6,20 @@
 #define NULL 0
 #endif
 
-//#ifndef spline
-//#define spline 
-//#include "Spline.h"
-//#endif
+/*
+#ifdef _WIN32
+#define DIVISION 10
+#endif
+
+#ifdef _linux
+#define DIVISION 100000
+#endif
+*/
 
 #include "Vector.h" //NOTE: no forward declaration, but not even guards... (suggestion from mathieu after forward declaration by chris)
 //class Vector;
 
 #include <vector>
-
-class Spline; //forward declaration because "not always guards work" (first suggestion, from mathieu)
 
 
 class Particle

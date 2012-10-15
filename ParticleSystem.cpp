@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <glut.h>// GLUT
+#include <GL/glut.h>// GLUT
 #include "ParticleSystem.h"
 
 #ifndef min

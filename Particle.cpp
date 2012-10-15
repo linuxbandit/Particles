@@ -1,11 +1,21 @@
 #include <stdlib.h>
-#include <glut.h>// GLUT
+#include <GL/glut.h>// GLUT
 #include "Particle.h"
 
 #ifndef min
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
 #endif
 
+
+#undef DIVISION
+
+#ifdef _WIN32
+#define DIVISION 10
+#endif
+
+#ifdef __gnu_linux__ // or __linux__ as well
+#define DIVISION 100000
+#endif
 
 	Particle::Particle(Vector location)
 	{
@@ -15,7 +25,7 @@
 		appliedForce = Vector(0,0,0); // nobody starts with gravity force
 		speed = 0;
 		damping = 0.01;
-		ttl = 100 + (int)rand() / 10;
+		ttl = 100 + (int)rand() / DIVISION ;
 		time = 0;
 	}
 
