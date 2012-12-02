@@ -3,21 +3,32 @@
 
 #include <stdlib.h>
 #include <iostream>		// I/O
-#include <GL/glut.h>// GLUT
 #include <time.h>
 
+#ifdef _WIN32
+#include <glut.h> // GLUT
+#endif
+
+#ifdef __gnu_linux__ // or __linux__ as well
+#include <GL/glut.h> // GLUT
+#endif
+
+
 #include <vector>
-
-
-#include "ParticleSystem.h"
-
-#include "OGL2Utils.cpp" //it is generally bad to include a cpp, I know..
 
 #ifndef PI
 #define PI 3.14159265
 #endif
 
 #include "Vector.h"
+
+#include "ParticleSystem.h"
+
+
+
+#include "OGL2Utils.cpp" //it is generally bad to include a cpp, I know..
+
+
 
 /**********LIGHTS*********/
 GLfloat white_light[] = {1.0, 1.0, 1.0, 1.0}; //lol
@@ -59,9 +70,8 @@ float cameraTarget;
 //std::vector<Particle> parts;
 std::vector<Vector> forces;
 
-//TENSION
+
 ParticleSystem field; // should call the default constructor! -.-
-//
 
 void cameraTransform()
 {
@@ -76,13 +86,7 @@ void cameraTransform()
 }
 
 
-float* transf(float a,float b,float c){ //DELETE
-	float* result=new float[3];
-	result[0]=a;
-	result[1]=b;
-	result[2]=c;
-	return result;
-}
+
 
 
 
@@ -119,7 +123,7 @@ void renderScene(){
 	glutSolidSphere(0.1f,4,4);
 	glPopMatrix();
 
-	setMaterial(ruby);
+    setMaterial(ruby);
 
 
 
@@ -319,6 +323,9 @@ void setupScene(){
 	glEnable(GL_NORMALIZE);
 	glEnable(GL_DEPTH_TEST);
 	
+    glEnable(GL_COLOR_MATERIAL); //enables the coloring of the material
+
+
     // Generate GL texture ID & load texture
     
 	//glEnable(GL_TEXTURE_2D); //never mix texture with material; therefore I enable and disable it in the mainloop

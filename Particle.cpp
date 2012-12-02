@@ -1,20 +1,27 @@
-#include <stdlib.h>
-#include <GL/glut.h>// GLUT
+//#include <stdlib.h>
 #include "Particle.h"
+
+#ifdef _WIN32
+#include <glut.h> // GLUT
+#endif
+
+#ifdef __gnu_linux__ // or __linux__ as well
+#include <GL/glut.h> // GLUT
+#endif
 
 #ifndef min
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
 #endif
 
-
+// because of http://social.msdn.microsoft.com/Forums/en/vcgeneral/thread/05f6bd7c-5543-4b72-bd6d-3bc9bd6b78be
 #undef DIVISION
 
 #ifdef _WIN32
-#define DIVISION 10
+#define DIVISION 10 
 #endif
 
 #ifdef __gnu_linux__ // or __linux__ as well
-#define DIVISION 100000
+#define DIVISION 1000000
 #endif
 
 	Particle::Particle(Vector location)
@@ -24,52 +31,44 @@
 		velocity = Vector(0,0,0);
 		appliedForce = Vector(0,0,0); // nobody starts with gravity force
 		speed = 0;
-		damping = 0.01;
+        damping = 0.01;
 		ttl = 100 + (int)rand() / DIVISION ;
 		time = 0;
+
+        colour = Vector(0,255,0);
 	}
 
-	void Particle::draw(Vector color)
+    void Particle::draw()
 	{
 		glPushMatrix(); //position in the world
 
 			//global transformations
 			glTranslatef(position[0],position[1],position[2]);
-			//glRotatef(rotation,0,1,0);
-			glScalef(1,1,1);
 
-			glPushMatrix();
-			//glutSolidSphere(size/8, 20, 20); //size = 0.1
+            //drawing spheres makes it expensive
+            //glutSolidSphere(size/8, 20, 20); //size = 0.1
 
-				glPointSize(size);
-				glColor3f(color[0],color[1],color[2]);//doesn't work (neither with [1] nor with .y)
-				glBegin(GL_POINTS);
-					glVertex3f(position[0],position[1],position[2]);
-				glEnd();
-
-			glPopMatrix();
+            //drawing vertices is quicker
+            glPointSize(size);
+            glColor3f(colour[0],colour[1],colour[2]);
+            glBegin(GL_POINTS);
+                glVertex3f(position[0],position[1],position[2]);
+            glEnd();
 
 		glPopMatrix(); //position in the world
 	}
 
+    //unused
 	void Particle::setPosition(Vector location)
 	{
 		position = location;
 	}
 
-
-	Vector Particle::getPosition()
+    //unused
+    Vector Particle::getPosition()
 	{
 		return position;
 	}
-
-	void Particle::forceAccumulate(std::vector<Vector> forces) //moved
-	{
-		appliedForce.zero();
-		for(unsigned int i = 0; i < forces.size(); i++)
-			appliedForce += forces[i];
-	}
-
 
 	void Particle::reset()
 	{
@@ -82,6 +81,7 @@
 			(int)rand()%2 == 0 ? (float)rand() / RAND_MAX *3 : -(float)rand() / RAND_MAX *3 , 
 			(int)rand()%2 == 0 ? (float)rand() / RAND_MAX *3 : -(float)rand() / RAND_MAX *3
 		) * 0.1;
+        colour = Vector(0,255,0);
 	}
 
 	void Particle::update()
@@ -93,8 +93,16 @@
 
 		time++; 
 		//NB who should call the check for life? here or particlesystem?
-		size -= 0.001;  //EVOLUTION
+        //size -= 0.001;  //EVOLUTION
 
+        float step = (255+time)/ttl;
+        colour.x += step ; //EVOLUTION (based on ttl)
+        colour.y -= step ; //EVOLUTION (based on ttl)
+
+        //from http://en.wikipedia.org/wiki/B%C3%A9zier_curve. Doesn't work as good as my method
+        /*float tee = time/ttl;
+        colour.x = (1-tee)*0.1 + tee*255;
+        colour.y = 255 - colour.x;*/
 
 		//velocity *= 0.9; //damping; There is no friction (air / inertia from land movement)
 
@@ -111,7 +119,12 @@
 
 
 		//cool collision detection
-		//method called by particleSystem
+        //was called by particleSystem
+
+        //was in ParticleSystem, moved here.
+        if(time>ttl) {
+            reset();
+        }
 
 	}
 
@@ -122,28 +135,29 @@
 
 		if( -25<position.x && position.x<25 && -25<position.z && position.z<25){
 
-		if((position-Vector(0,0,0)).dotProduct(planeNormal) < 0.01 ){ //assumption: 0,0,0 is always part of the plane (the "floor" plane has always y=0)
-			
-			//position.y = 0;
-			//more general:
-			float correction = -((position - Vector(0,0,0)).dotProduct(planeNormal));
-			position.y += correction ;
+            if((position-Vector(0,0,0)).dotProduct(planeNormal) < 0.01 ){ //assumption: 0,0,0 is always part of the plane (the "floor" plane has always y=0)
+
+                //position.y = 0;
+                //more general:
+                float correction = -((position - Vector(0,0,0)).dotProduct(planeNormal));
+                position.y += correction ;
 
 
-			velocity = ( planeNormal * -(velocity.dotProduct(planeNormal)) );
-			velocity *= 0.7;//0.5 //velocity damping
+                velocity = ( planeNormal * -(velocity.dotProduct(planeNormal)) );
+                velocity *= 0.7;//0.5 //velocity damping
 
 
-			/*Vector velocityN, velocityT;
-			
-			velocityN = ( planeNormal * -(velocity.dotProduct(planeNormal)) );
-			velocityT = velocity - velocityN ;
-			velocity = velocityT + velocityN*0.7; */ //should be minus, but velocityN has already it in itself
-			
-			if(Vector(0,velocity.y,0).length()<0.05){
-				velocity.y=0; // i cant zero x and z
-			}
-		}}
+                /*Vector velocityN, velocityT;
+
+                velocityN = ( planeNormal * -(velocity.dotProduct(planeNormal)) );
+                velocityT = velocity - velocityN ;
+                velocity = velocityT + velocityN*0.7; */ //should be minus, but velocityN has already it in itself
+
+                if(Vector(0,velocity.y,0).length()<0.05){
+                    velocity.y=0; // i cant zero x and z
+                }
+            }
+        }
 	}
 
 	//void Particle::addImpulse(Vector carVelocity) //original

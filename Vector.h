@@ -2,6 +2,8 @@
     Vector class
     © Keith O'Conor 2004
     keith.oconor @ {cs.tcd.ie, gmail.com}
+
+    modification by Fabrizio
 */
 
 #ifndef VECTOR_H
@@ -187,6 +189,15 @@ public:
  
 		 return Vector( nx, ny, nz );
 	}
+
+    //Fabrizio (just silly method to use the vector in functions like glvertex3fv()
+    float* fv(){
+        float* result=new float[3];
+        result[0]=this->x;
+        result[1]=this->y;
+        result[2]=this->z;
+        return result;
+    }
 
 };
 

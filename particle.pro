@@ -1,6 +1,8 @@
 TEMPLATE = app
 CONFIG += console
 CONFIG -= qt
+LIBS += -lGL -lGLU -lglut
+
 
 SOURCES += \
     ParticleSystem.cpp \

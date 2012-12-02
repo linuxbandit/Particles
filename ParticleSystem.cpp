@@ -1,11 +1,18 @@
-#include <stdlib.h>
-#include <GL/glut.h>// GLUT
+//#include <stdlib.h>
 #include "ParticleSystem.h"
+
+#ifdef _WIN32
+#include <glut.h> // GLUT
+#endif
+
+#ifdef __gnu_linux__ // or __linux__ as well
+#include <GL/glut.h> // GLUT
+#endif
 
 #ifndef min
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
 #endif
-
+//TODO: clean constructors
 
 	ParticleSystem::ParticleSystem(int size = 1) // NOT DEFAULT CONSTRUCTOR
 	{
@@ -25,7 +32,7 @@
 	{
 		//for (std::vector<Particle*> member = p.begin(); member != p.end(); member++) //iterators workkkkkk.........
 		//  delete *member;
-		for(int i=0; i<p.size(); i++)
+        for(unsigned int i=0; i<p.size(); i++)
 			delete p.at(i);
 		p.clear();
 	}
@@ -69,6 +76,18 @@
 		return n;
 	}
 
+    // from http://www.xbdev.net/physics/Verlet/index.php
+    void ParticleSystem::VerletStep(int i)
+    {
+        Compute_Forces(i);
+
+        p[i]->position = p[i]->position*2 - p[i]->previousPos + p[i]->appliedForce * (Vtimestep*Vtimestep);
+        p[i]->previousPos = p[i]->position;
+
+        t += Vtimestep; /* update time */
+    }
+
+    //from Baraff's paper (very dispersive method..)
 	void ParticleSystem::EulerStep(int i)
 	{
 		Vector tempV, tempA, currX, currV; //used for Euler integration at each step
@@ -79,18 +98,6 @@
 		ParticleSetState(i,currX,currV); /* update state */
 		t += timestep; /* update time */
 	}
-
-	void ParticleSystem::VerletStep(int i)
-	{
-		// from http://www.xbdev.net/physics/Verlet/index.php
-		Compute_Forces(i);
-
-		p[i]->position = p[i]->position*2 - p[i]->previousPos + p[i]->appliedForce * (Vtimestep*Vtimestep);
-		p[i]->previousPos = p[i]->position;
-
-		t += Vtimestep; /* update time */
-	}
-
 
 	/* gather state from the particles into dst */
 	void ParticleSystem::ParticleGetState(int i, Vector &currX, Vector &currV){//temp2
@@ -115,9 +122,10 @@
 			tempA = p[i]->appliedForce; /* vdot = f/m */
 	}
 
+    //deprecated. I am not anymore scanning the whole array one time for zero and one time for using it..
 	void ParticleSystem::Clear_Forces()
 	{
-		for(int i=0; i < p.size(); i++) p[i]->appliedForce.zero();
+        for(unsigned int i=0; i < p.size(); i++) p[i]->appliedForce.zero();
 	}
 
 	void ParticleSystem::Compute_Forces(int i)
@@ -135,7 +143,7 @@
 								( (p[i]->position.distanceSq(blackHoleCentre)) * (p[i]->position.distanceSq(blackHoleCentre))// * (p[i]->position.distanceSq(blackHoleCentre))
 								) * blackHoleMagnitude ;
 
-			for(int k=0; k < forces.size(); k++)
+            for(unsigned int k=0; k < forces.size(); k++)
 				p[i]->appliedForce += forces[k];
 
 			}catch (std::exception& e) {
@@ -144,7 +152,7 @@
 
 	}
 
-	void ParticleSystem::ScaleVector(Vector &tempV, Vector &tempA) //inertia?
+    void ParticleSystem::ScaleVector(Vector &tempV, Vector &tempA) //damping?
 	{
 		tempV *= timestep;
 		tempA *= timestep;
@@ -156,27 +164,32 @@
 		currV += tempA;
 	}
 
+    //scans the array to integrate & update particle by particle.
+    //the particle's position is integrated with the integrator
+    //of this class and then updated with the particle's update method
 	void ParticleSystem::update()
 	{
 		
-		for(int i=0; i < p.size(); i++){
-			EulerStep(i); //integration; I expect the particles to move
-			//VerletStep(i);
-			p[i]->update(); // I update ONLY their time (for death), then (below) I check if they really are dead
-			p[i]->coolCollDet(planeNormal);
+        for(unsigned int i=0; i < p.size(); i++){
+            EulerStep(i); //integration; I expect the particles to move
+            //VerletStep(i);
+            p[i]->coolCollDet(planeNormal);
+            p[i]->update(); // I update their time (for death), the color (and size?) for evolution.
 		}
-		checkParticlesLife(); //should this routine be here or in update?
+        //checkParticlesLife(); //should this routine be here or in update?
 	}
 
+    //deprecated. I am checking at the end of the update of a particle..
 	void ParticleSystem::checkParticlesLife()
 	{
-		for(int i=0; i < p.size(); i++)
+        for(unsigned int i=0; i < p.size(); i++)
 			if(p[i]->time>p[i]->ttl) {
 				p[i]->reset();
 			}
 	}
 
+    //scans the particles array and calls their draw method
 	void ParticleSystem::draw()
 	{
-		for(int i=0; i < p.size(); i++)		p[i]->draw(Vector(255,0,255)) ;
+        for(unsigned int i=0; i < p.size(); i++)		p[i]->draw() ;
 	}

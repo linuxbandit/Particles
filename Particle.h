@@ -29,17 +29,18 @@ private:
 
 public:
 	float size; //for evolution
+    Vector colour;//for evolution (works better)
 
-	float mass; //not used for particles
-	Vector previousPos; //Verlet integration
+    float mass; //not used for particles (=1)
 
 	/*Phase vectors*/
 	Vector position;
 	Vector velocity;
 
-	float speed; //wanted to be a damping parameter, it's unused
+    Vector previousPos; //Verlet integration
 
-	float damping; //another dumping
+	float speed; //wanted to be a damping parameter, it's unused
+    float damping; //another damping
 
 	Vector appliedForce; //vector containing the cumulative force applied on the particle
 
@@ -47,32 +48,25 @@ public:
 	int time; //time existed
 	Vector startPos; //when ttl expires, I reset its position to this one
 
+
+//-------Methods----------
+
+
 	Particle(Vector pos) ;
 
 	//~Particle() ;
 
-	//add status, for the "should I draw it or not"
-	
-
 	float getSize();
 
 	void setPosition(Vector location); //useless
-
 	Vector getPosition(); //useless
 
-	void draw(Vector color);
-
-	void forceAccumulate(std::vector<Vector> forces); //moved
+    void draw();
 
 	void reset();
 
 	void coolCollDet(Vector planeNormal) ;
 
-
-	//gonna substitute those methods
 	void update();
 
-	void updateForce(Vector newForcePulse);
-
-	void addImpulse(Vector carDirection);
 };

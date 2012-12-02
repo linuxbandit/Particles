@@ -1,0 +1,2 @@
+all:
+	g++ Particle*.cpp -o iet -lGL -lGLU -lglut

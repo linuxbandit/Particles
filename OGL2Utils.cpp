@@ -1,5 +1,7 @@
 //OGL2 utilities
 //contains some (GLOBAL <-- to be changed) definitions of variables as well as handy methods
+//THIS FILE NEEDS TO BE LEFT OUT OF THE COMPILATION 
+
 
 //TODO: check if cstring included already..
 #include <cstring>

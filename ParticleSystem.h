@@ -6,10 +6,10 @@
 #define NULL 0
 #endif
 
-#include "Vector.h" //NOTE: no forward declaration, but not even guards... (suggestion from mathieu after forward declaration by chris)
+//#include "Vector.h" //NOTE: no forward declaration, but not even guards... (suggestion from mathieu after forward declaration by chris)
 #include "Particle.h"
 
-#include <vector>
+//#include <vector>
 
 class ParticleSystem
 {
@@ -31,6 +31,11 @@ public:
 	Vector planeNormal;
 	Vector blackHoleCentre;
 	float blackHoleMagnitude;
+
+
+
+//-------Methods----------
+
 
 	ParticleSystem(int size) ;
 	ParticleSystem() ;
