@@ -16,8 +16,12 @@
 #endif
 */
 
-#include "Vector.h" //NOTE: no forward declaration, but not even guards... (suggestion from mathieu after forward declaration by chris)
-//class Vector;
+#include "Vector3f.h" //NOTE: no forward declaration, but not even guards... (suggestion from mathieu after forward declaration by chris)
+//class Vector3f;
+
+#ifndef PLANE_H
+#include "Plane.h"
+#endif
 
 #include <vector>
 
@@ -29,44 +33,44 @@ private:
 
 public:
 	float size; //for evolution
-    Vector colour;//for evolution (works better)
+    Vector3f colour;//for evolution (works better)
 
     float mass; //not used for particles (=1)
 
 	/*Phase vectors*/
-	Vector position;
-	Vector velocity;
+    Vector3f position;
+    Vector3f velocity;
 
-    Vector previousPos; //Verlet integration
+    Vector3f previousPos; //Verlet integration
 
 	float speed; //wanted to be a damping parameter, it's unused
     float damping; //another damping
 
-	Vector appliedForce; //vector containing the cumulative force applied on the particle
+    Vector3f appliedForce; //vector containing the cumulative force applied on the particle
 
 	int ttl; //time to live
 	int time; //time existed
-	Vector startPos; //when ttl expires, I reset its position to this one
+    Vector3f startPos; //when ttl expires, I reset its position to this one
 
 
 //-------Methods----------
 
 
-	Particle(Vector pos) ;
+    Particle(Vector3f pos) ;
 
 	//~Particle() ;
 
 	float getSize();
 
-	void setPosition(Vector location); //useless
-	Vector getPosition(); //useless
+    void setPosition(Vector3f location); //useless
+    Vector3f getPosition(); //useless
 
     void draw();
 
 	void reset();
 
-	void coolCollDet(Vector planeNormal) ;
+    void coolCollDet(Vector3f planeNormal) ;
 
-	void update();
+    void update(Plane collisionPlane);
 
 };

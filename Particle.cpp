@@ -24,18 +24,18 @@
 #define DIVISION 1000000
 #endif
 
-	Particle::Particle(Vector location)
+    Particle::Particle(Vector3f location)
 	{
 		size = 2.0;
 		startPos = previousPos = position = location;
-		velocity = Vector(0,0,0);
-		appliedForce = Vector(0,0,0); // nobody starts with gravity force
+        velocity = Vector3f(0,0,0);
+        appliedForce = Vector3f(0,0,0); // nobody starts with gravity force
 		speed = 0;
         damping = 0.01;
 		ttl = 100 + (int)rand() / DIVISION ;
 		time = 0;
 
-        colour = Vector(0,255,0);
+        colour = Vector3f(0,255,0);
 	}
 
     void Particle::draw()
@@ -43,7 +43,7 @@
 		glPushMatrix(); //position in the world
 
 			//global transformations
-			glTranslatef(position[0],position[1],position[2]);
+            //glTranslatef(position[0],position[1],position[2]);
 
             //drawing spheres makes it expensive
             //glutSolidSphere(size/8, 20, 20); //size = 0.1
@@ -59,13 +59,13 @@
 	}
 
     //unused
-	void Particle::setPosition(Vector location)
+    void Particle::setPosition(Vector3f location)
 	{
 		position = location;
 	}
 
     //unused
-    Vector Particle::getPosition()
+    Vector3f Particle::getPosition()
 	{
 		return position;
 	}
@@ -73,18 +73,19 @@
 	void Particle::reset()
 	{
 		position = startPos;
-		velocity = Vector(0,0,0);
+        velocity = Vector3f(0,0,0);
 		time = 0;
 		size = 2.0;
-		velocity = Vector(
+        velocity = Vector3f(
 			(int)rand()%2 == 0 ? (float)rand() / RAND_MAX *3 : -(float)rand() / RAND_MAX *3 ,
 			(int)rand()%2 == 0 ? (float)rand() / RAND_MAX *3 : -(float)rand() / RAND_MAX *3 , 
 			(int)rand()%2 == 0 ? (float)rand() / RAND_MAX *3 : -(float)rand() / RAND_MAX *3
 		) * 0.1;
-        colour = Vector(0,255,0);
+        colour = Vector3f(0,255,0);
 	}
 
-	void Particle::update()
+    //now only passes the planeNormal, but it will pass directly the whole Plane
+    void Particle::update(Plane collisionPlane)
 	{
 		
 		//Euler integration
@@ -117,9 +118,38 @@
 		//	}
 		//}
 
-
 		//cool collision detection
-        //was called by particleSystem
+        if( -25<position.x && position.x<25 && -25<position.z && position.z<25){
+
+//            std::cout << collisionPlane.origin << "  "  <<  position << std::endl;
+//            if (position.y < -8.5) {
+//                std::cout << position.y << std::endl;
+//                //exit(0);
+//            }
+
+            if((position-collisionPlane.origin).dotProduct(collisionPlane.normal) < 0.01 ){
+
+                //position.y = 0;
+                //more general:
+                float correction = -((position - collisionPlane.origin).dotProduct(collisionPlane.normal));
+                position.y += correction ;
+
+
+                velocity = ( collisionPlane.normal * -(velocity.dotProduct(collisionPlane.normal)) );
+                velocity *= 0.7;//0.5 //velocity damping
+
+
+                /*Vector velocityN, velocityT;
+
+                velocityN = ( planeNormal * -(velocity.dotProduct(planeNormal)) );
+                velocityT = velocity - velocityN ;
+                velocity = velocityT + velocityN*0.7; */ //should be minus, but velocityN has already it in itself
+
+                if(Vector3f(0,velocity.y,0).length()<0.05){
+                    velocity.y=0; // i cant zero x and z
+                }
+            }
+        }
 
         //was in ParticleSystem, moved here.
         if(time>ttl) {
@@ -128,18 +158,19 @@
 
 	}
 
-	void Particle::coolCollDet(Vector planeNormal)
+    //deprecated. done in the update function
+    void Particle::coolCollDet(Vector3f planeNormal)
 	{
 		//Xn dot X = d is the vector equation of the plane. d is ...??
 
 
 		if( -25<position.x && position.x<25 && -25<position.z && position.z<25){
 
-            if((position-Vector(0,0,0)).dotProduct(planeNormal) < 0.01 ){ //assumption: 0,0,0 is always part of the plane (the "floor" plane has always y=0)
+            if((position-Vector3f(0,0,0)).dotProduct(planeNormal) < 0.01 ){ //assumption: 0,0,0 is always part of the plane (the "floor" plane has always y=0)
 
                 //position.y = 0;
                 //more general:
-                float correction = -((position - Vector(0,0,0)).dotProduct(planeNormal));
+                float correction = -((position - Vector3f(0,0,0)).dotProduct(planeNormal));
                 position.y += correction ;
 
 
@@ -153,7 +184,7 @@
                 velocityT = velocity - velocityN ;
                 velocity = velocityT + velocityN*0.7; */ //should be minus, but velocityN has already it in itself
 
-                if(Vector(0,velocity.y,0).length()<0.05){
+                if(Vector3f(0,velocity.y,0).length()<0.05){
                     velocity.y=0; // i cant zero x and z
                 }
             }

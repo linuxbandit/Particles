@@ -7,10 +7,12 @@ LIBS += -lGL -lGLU -lglut
 SOURCES += \
     ParticleSystem.cpp \
     Particles.cpp \
-    Particle.cpp
+    Particle.cpp \
+    Plane.cpp
 
 HEADERS += \
-    Vector.h \
     ParticleSystem.h \
-    Particle.h
+    Particle.h \
+    Vector3f.h \
+    Plane.h
 

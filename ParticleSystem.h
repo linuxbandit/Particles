@@ -9,6 +9,10 @@
 //#include "Vector.h" //NOTE: no forward declaration, but not even guards... (suggestion from mathieu after forward declaration by chris)
 #include "Particle.h"
 
+#ifndef PLANE_H
+#include "Plane.h"
+#endif
+
 //#include <vector>
 
 class ParticleSystem
@@ -19,18 +23,19 @@ private:
 public:
 
 	std::vector<Particle*> p; /* vector of pointers to particles */
-	std::vector<Vector> forces;
+    std::vector<Vector3f> forces;
 	int n;		 /* number of particles */
 	float t;	 /* simulation clock */
 	float timestep; /* Euler's integration */
 	float Vtimestep; /* Verlet's integration */
 
+    Plane collisionPlane; // the floor where the particles bounce
 
-	Vector pointOrigin;
+    Vector3f pointOrigin; // where particles will be originated
 
-	Vector planeNormal;
-	Vector blackHoleCentre;
-	float blackHoleMagnitude;
+    Vector3f planeNormal; //will be substituted by the class Plane
+    Vector3f blackHoleCentre; //position of the small attractor
+    float blackHoleMagnitude; //magnitude of the attractor
 
 
 
@@ -45,26 +50,26 @@ public:
 
 	int getSystemSize();
 
-	void setPosition(Vector location);
+    void setPosition(Vector3f location);
 
-	Vector getPosition();
+    Vector3f getPosition();
 
 	void VerletStep(int i);
 	void EulerStep(int i);
-	void ParticleDerivative(int i, Vector &tempV, Vector &tempA); /* get deriv */
-	void ScaleVector(Vector &tempV, Vector &tempA); /* scale it */ //
-	void ParticleGetState(int i, Vector &currX, Vector &currV); /* get state */
-	void AddVectors(Vector &currX, Vector &currV,Vector &tempV, Vector &tempA); /* add -> temp2 */ //
-	void ParticleSetState(int i, Vector &currX, Vector &currV); /* update state */
+    void EulerStepFab(int i);
+    void ParticleDerivative(int i, Vector3f &tempV, Vector3f &tempA); /* get deriv */
+    void ScaleVector(Vector3f &tempV, Vector3f &tempA); /* scale it */ //
+    void ParticleGetState(int i, Vector3f &currX, Vector3f &currV); /* get state */
+    void AddVectors(Vector3f &currX, Vector3f &currV,Vector3f &tempV, Vector3f &tempA); /* add -> temp2 */ //
+    void ParticleSetState(int i, Vector3f &currX, Vector3f &currV); /* update state */
 
 	void Clear_Forces();
 	void Compute_Forces(int i);
 
 
 	void update();
-	void checkParticlesLife();
 
-	void draw();
+    void draw();
 
 
 };

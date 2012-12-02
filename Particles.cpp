@@ -20,7 +20,7 @@
 #define PI 3.14159265
 #endif
 
-#include "Vector.h"
+#include "Vector3f.h"
 
 #include "ParticleSystem.h"
 
@@ -51,16 +51,8 @@ unsigned char Buttons[3] = {0};
 //time indicator
 int frames=0;
 
-void setupScene();
-void updateScene();
-void renderScene();
-void exitScene();
-void keypress(unsigned char key, int x, int y);
-void setViewport(int width, int height);
-
 bool		wireframe=true;
 int         windowId;
-
 
 float cameraRotation;
 float cameraTarget;
@@ -68,27 +60,208 @@ float cameraTarget;
 
 
 //std::vector<Particle> parts;
-std::vector<Vector> forces;
+std::vector<Vector3f> forces;
 
 
 ParticleSystem field; // should call the default constructor! -.-
 
+
+//---auxiliary methods (setup scene, keyboard handler, mouse handler)---------
+
+void setupScene(){
+
+    std::cout<<"Initializing scene..."<<std::endl;
+
+    std::cout.precision(5);
+
+
+    glClearColor(0.5,0.5,0.5,1.0);
+
+
+    //Set up Lighting Stuff
+    glLightfv(GL_LIGHT0, GL_POSITION, left_light_position);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
+    glLightfv(GL_LIGHT1, GL_POSITION, right_light_position);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, white_light);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, white_light);
+    glShadeModel(GL_SMOOTH);
+
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_COLOR_MATERIAL); //enables the coloring of the material
+
+
+    // Generate GL texture ID & load texture
+
+    //glEnable(GL_TEXTURE_2D); //never mix texture with material; therefore I enable and disable it in the mainloop
+
+    //glBindTexture(GL_TEXTURE_2D, texture[2]);
+
+
+
+    //forces = std::vector<Vector>(2);
+    forces.push_back(Vector3f(-0.01,0.0,0.0));//wind
+    forces.push_back(Vector3f(0.0,0.0,0.0));//not
+    forces.push_back(Vector3f(0.0,-0.09,0.0));//ok 0.15; gravity force
+
+
+    //TENSION
+    //field = ParticleSystem(100); //100 particles
+    //field(100); //100 particles (wouldn't work anyway)
+    field.forces.push_back(Vector3f(0.0,-0.09,0.0)); //populate with forces (nb: i shouldn't push back; i should substitute the only null force that is there already)
+    field.forces.push_back(forces.at(0));
+
+    for(unsigned int i=0; i<field.forces.size(); i++){
+        std::cout << i << " " << field.forces.at(i) << std::endl;
+    }
+
+}
+
+void exitScene()
+{
+
+    std::cout<<"Exiting scene..."<<std::endl;
+
+    // Close window
+    glutDestroyWindow(windowId);
+
+    // Free any allocated memory
+    //delete field;
+
+    // Exit program
+    exit(0);
+}
+
+void setViewport(int width, int height) {
+
+    // Work out window ratio, avoid divide-by-zero
+    if(height==0) height=1;
+    float ratio = float(width)/float(height);
+
+    // Reset projection matrix
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    // Fill screen with viewport
+    glViewport(0, 0, width, height);
+
+    // Set a 45 degree perspective
+    gluPerspective(45, ratio, .1, 1000);
+
+}
+
 void cameraTransform()
 {
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 
-	glTranslatef(0,0,-zoom);
-	glTranslatef(tx,ty,0);
-	glRotatef(rotx,1,0,0);
-	glRotatef(roty-170,0,1,0);
-	
+    glTranslatef(0,0,-zoom);
+    glTranslatef(tx,ty,0);
+    glRotatef(rotx,1,0,0);
+    glRotatef(roty-170,0,1,0);
+
 }
 
 
+void keypress(unsigned char key, int x, int y){
+
+    // Test if user pressed ESCAPE (ascii 27)
+    // If so, exit the program
+    if(key==27){
+        exitScene();
+    }
+
+    // 'W' key toggles wireframe mode on & off
+    /*if(key == 'w' || key == 'W'){
+        wireframe=!wireframe;
+        if(wireframe){
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+        else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }*/
+
+    // Other possible keypresses go here
+    if(key == 'a'){
+        field.blackHoleMagnitude -= 0.1;
+    }
+    if(key == 'd'){
+        field.blackHoleMagnitude += 0.1;
+    }
+
+    if(key == 's'){
+        field.blackHoleCentre.y-=0.1;
+    }
+    if(key == 'w'){
+        field.blackHoleCentre.y+=0.1;
+    }
+
+}
+
+void keyreleased(unsigned char key, int x, int y){
+    if(key == 'w'){ //
+    }
+    if(key == 's'){ //
+    }
+
+    if(key == 'a'){ //
+    }
+
+    if(key == 'd'){ //
+    }
+}
+
+void Motion(int x,int y)
+{
+    int diffx=x-lastx;
+    int diffy=y-lasty;
+    lastx=x;
+    lasty=y;
+
+    if( Buttons[2] )
+    {
+        zoom -= (float) 0.15f * diffy;
+    }
+    else if( Buttons[0] )
+    {
+        rotx += (float) 0.5f * diffy;
+        roty += (float) 0.5f * diffx;
+    }
+    else if( Buttons[1] )
+    {
+        tx += (float) 0.05f * diffx;
+        ty -= (float) 0.05f * diffy;
+    }
+
+}
 
 
+void Mouse(int b,int s,int x,int y)
+{
+    lastx=x;
+    lasty=y;
+    switch(b)
+    {
+    case GLUT_LEFT_BUTTON:
+        Buttons[0] = ((GLUT_DOWN==s)?1:0);
+        break;
+    case GLUT_MIDDLE_BUTTON:
+        Buttons[1] = ((GLUT_DOWN==s)?1:0);
+        break;
+    case GLUT_RIGHT_BUTTON:
+        Buttons[2] = ((GLUT_DOWN==s)?1:0);
+        break;
+    default:
+        break;
+    }
 
+}
+
+
+//----Methods  (draw & update)-------------
 
 void renderScene(){
         
@@ -106,7 +279,9 @@ void renderScene(){
 	
 	//fog();
 
-	cubeWorld();
+    //cubeWorld();
+
+    field.collisionPlane.draw(Vector3f(1,1,1));
 
 	glEnable(GL_LIGHTING);//resume lighting
 
@@ -124,7 +299,6 @@ void renderScene(){
 	glPopMatrix();
 
     setMaterial(ruby);
-
 
 
 	glEnable(GL_BLEND);
@@ -175,11 +349,14 @@ void renderScene(){
 void updateScene(int millisec)
 {
 		frames ++ ;
-		/*THIS IS A SHITE WINDOWS METHOD
+
+        /*
+        THIS IS A SHITE WINDOWS METHOD
 		// Wait until at least 16ms passed since start of last frame
 		// Effectively caps framerate at ~60fps
 		while(timeGetTime()-lastTickCount<16);
-		lastTickCount=timeGetTime();*/
+        lastTickCount=timeGetTime();
+        */
     
 		/*  Debug outputs
 		 */
@@ -200,189 +377,11 @@ void updateScene(int millisec)
 		glutPostRedisplay();
 
         glutTimerFunc(millisec, updateScene, millisec);
-
 }
 
-void keypress(unsigned char key, int x, int y){
-	
-	// Test if user pressed ESCAPE (ascii 27)
-	// If so, exit the program
-    if(key==27){
-		exitScene();
-	}
 
-	// 'W' key toggles wireframe mode on & off
-	/*if(key == 'w' || key == 'W'){
-		wireframe=!wireframe;
-		if(wireframe){
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		}
-		else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}*/
-
-	// Other possible keypresses go here
-	if(key == 'a'){ 
-		field.blackHoleMagnitude -= 0.1;
-	}
-	if(key == 'd'){ 
-		field.blackHoleMagnitude += 0.1;
-	}
-
-	if(key == 's'){ 
-		field.blackHoleCentre.y-=0.1;
-	}
-	if(key == 'w'){ 
-		field.blackHoleCentre.y+=0.1;
-	}
-	
-}
-
-void keyreleased(unsigned char key, int x, int y){
-	if(key == 'w'){ // 
-	}
-	if(key == 's'){ // 	
-	}
-
-	if(key == 'a'){ // 
-	}
-
-	if(key == 'd'){ // 
-	}
-}
-
-//-------------------------------------------------------------------------------
+//------Entry point----------------------------------------------------------
 //
-void Motion(int x,int y)
-{
-	int diffx=x-lastx;
-	int diffy=y-lasty;
-	lastx=x;
-	lasty=y;
-
-	if( Buttons[2] )
-	{
-		zoom -= (float) 0.15f * diffy;
-	}
-	else if( Buttons[0] )
-	{
-		rotx += (float) 0.5f * diffy;
-		roty += (float) 0.5f * diffx;		
-	}
-	else if( Buttons[1] )
-	{
-		tx += (float) 0.05f * diffx;
-		ty -= (float) 0.05f * diffy;
-	}
-			
-}
-
-//-------------------------------------------------------------------------------
-//
-void Mouse(int b,int s,int x,int y)
-{
-	lastx=x;
-	lasty=y;
-	switch(b)
-	{
-	case GLUT_LEFT_BUTTON:
-		Buttons[0] = ((GLUT_DOWN==s)?1:0);
-		break;
-	case GLUT_MIDDLE_BUTTON:
-		Buttons[1] = ((GLUT_DOWN==s)?1:0);
-		break;
-	case GLUT_RIGHT_BUTTON:
-		Buttons[2] = ((GLUT_DOWN==s)?1:0);
-		break;
-	default:
-		break;		
-	}
-	
-}
-
-void setupScene(){
-
-	std::cout<<"Initializing scene..."<<std::endl;
-
-	std::cout.precision(5);
-    
-
-    glClearColor(0.5,0.5,0.5,1.0);
-
-
-	//Set up Lighting Stuff
-	glLightfv(GL_LIGHT0, GL_POSITION, left_light_position);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
-	glLightfv(GL_LIGHT1, GL_POSITION, right_light_position);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, white_light);
-	glEnable(GL_LIGHT0);
-	glEnable(GL_LIGHT1);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, white_light);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, white_light);
-	glShadeModel(GL_SMOOTH);
-
-	glEnable(GL_NORMALIZE);
-	glEnable(GL_DEPTH_TEST);
-	
-    glEnable(GL_COLOR_MATERIAL); //enables the coloring of the material
-
-
-    // Generate GL texture ID & load texture
-    
-	//glEnable(GL_TEXTURE_2D); //never mix texture with material; therefore I enable and disable it in the mainloop
-	
-	//glBindTexture(GL_TEXTURE_2D, texture[2]);
-
-
-
-	//forces = std::vector<Vector>(2);
-	forces.push_back(Vector(-0.01,0.0,0.0));//wind
-	forces.push_back(Vector(0.0,0.0,0.0));//not
-	forces.push_back(Vector(0.0,-0.09,0.0));//ok 0.15; gravity force
-	
-
-	//TENSION
-	//field = ParticleSystem(100); //100 particles
-	//field(100); //100 particles (wouldn't work anyway)
-	field.forces.push_back(Vector(0.0,-0.09,0.0)); //populate with forces (nb: i shouldn't push back; i should substitute the only null force that is there already)
-	field.forces.push_back(forces.at(0));
-
-	for(int i=0; i<field.forces.size(); i++){
-		std::cout << i << " " << field.forces.at(i) << std::endl;
-	}
-
-}
-
-void exitScene()
-{
-
-    std::cout<<"Exiting scene..."<<std::endl;
-
-    // Close window
-    glutDestroyWindow(windowId);
-
-    // Free any allocated memory
-
-    // Exit program
-    exit(0);
-}
-
-void setViewport(int width, int height) {
-
-    // Work out window ratio, avoid divide-by-zero
-    if(height==0) height=1;
-	float ratio = float(width)/float(height);
-
-	// Reset projection matrix
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	
-	// Fill screen with viewport
-	glViewport(0, 0, width, height);
-
-	// Set a 45 degree perspective
-	gluPerspective(45, ratio, .1, 1000);
-
-}
 
 int main(int argc, char *argv[]){
         
