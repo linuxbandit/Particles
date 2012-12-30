@@ -30,8 +30,6 @@ class Particle
 {
 private:
 	
-
-public:
 	float size; //for evolution
     Vector3f colour;//for evolution (works better)
 
@@ -52,8 +50,11 @@ public:
 	int time; //time existed
     Vector3f startPos; //when ttl expires, I reset its position to this one
 
+public:
 
 //-------Methods----------
+
+
 
 
     Particle(Vector3f pos) ;
@@ -62,14 +63,20 @@ public:
 
 	float getSize();
 
-    void setPosition(Vector3f location); //useless
-    Vector3f getPosition(); //useless
+    void addPosition(Vector3f offsetLocation);
+    void setPosition(Vector3f newLocation);
+    Vector3f getPosition();
+    void setVelocity(Vector3f newVelocity);
+    Vector3f getVelocity();
+    void setForce(Vector3f newForce);
+    Vector3f getForce();
+
 
     void draw();
 
 	void reset();
 
-    void coolCollDet(Vector3f planeNormal) ;
+    void coolCollDet(Vector3f planeNormal) ; //delete
 
     void update(Plane collisionPlane);
 

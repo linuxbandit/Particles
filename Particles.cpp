@@ -63,8 +63,7 @@ float cameraTarget;
 std::vector<Vector3f> forces;
 
 
-ParticleSystem field; // should call the default constructor! -.-
-
+ParticleSystem field;
 
 //---auxiliary methods (setup scene, keyboard handler, mouse handler)---------
 
@@ -112,11 +111,11 @@ void setupScene(){
     //TENSION
     //field = ParticleSystem(100); //100 particles
     //field(100); //100 particles (wouldn't work anyway)
-    field.forces.push_back(Vector3f(0.0,-0.09,0.0)); //populate with forces (nb: i shouldn't push back; i should substitute the only null force that is there already)
-    field.forces.push_back(forces.at(0));
+    field.SystemForces().push_back(Vector3f(0.0,-0.09,0.0)); //populate with forces (nb: i shouldn't push back; i should substitute the only null force that is there already)
+    field.SystemForces().push_back(forces.at(0));
 
-    for(unsigned int i=0; i<field.forces.size(); i++){
-        std::cout << i << " " << field.forces.at(i) << std::endl;
+    for(unsigned int i=0; i<field.getSystemForces().size(); i++){
+        std::cout << i << " " << field.getSystemForces().at(i) << std::endl;
     }
 
 }
@@ -185,19 +184,11 @@ void keypress(unsigned char key, int x, int y){
     }*/
 
     // Other possible keypresses go here
-    if(key == 'a'){
-        field.blackHoleMagnitude -= 0.1;
-    }
-    if(key == 'd'){
-        field.blackHoleMagnitude += 0.1;
-    }
+    if(key == 'a'){   field.addBlackHoleMagnitude( -0.1 ) ;    }
+    if(key == 'd'){   field.addBlackHoleMagnitude(  0.1 ) ;    }
 
-    if(key == 's'){
-        field.blackHoleCentre.y-=0.1;
-    }
-    if(key == 'w'){
-        field.blackHoleCentre.y+=0.1;
-    }
+    if(key == 's'){   field.addBlackHoleCentreY (-0.1 ) ;    }
+    if(key == 'w'){   field.addBlackHoleCentreY ( 0.1 ) ;    }
 
 }
 
@@ -281,7 +272,7 @@ void renderScene(){
 
     //cubeWorld();
 
-    field.collisionPlane.draw(Vector3f(1,1,1));
+    field.getCollisionPlane().draw(Vector3f(1,1,1));
 
 	glEnable(GL_LIGHTING);//resume lighting
 
@@ -294,7 +285,7 @@ void renderScene(){
 	setMaterial(jade);
 	
 	glPushMatrix();
-	glTranslatef(field.blackHoleCentre.x,field.blackHoleCentre.y,field.blackHoleCentre.z);
+    glTranslatef(field.getBlackHoleCentre().x,field.getBlackHoleCentre().y,field.getBlackHoleCentre().z);
 	glutSolidSphere(0.1f,4,4);
 	glPopMatrix();
 

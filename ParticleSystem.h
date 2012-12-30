@@ -13,15 +13,14 @@
 #include "Plane.h"
 #endif
 
+#define PARTICLES_NUMBER 3000; //not yet used as it can't be the default parameter
+
 //#include <vector>
 
 class ParticleSystem
 {
 private:
 	
-
-public:
-
 	std::vector<Particle*> p; /* vector of pointers to particles */
     std::vector<Vector3f> forces;
 	int n;		 /* number of particles */
@@ -37,22 +36,31 @@ public:
     Vector3f blackHoleCentre; //position of the small attractor
     float blackHoleMagnitude; //magnitude of the attractor
 
-
+public:
 
 //-------Methods----------
 
 
-	ParticleSystem(int size) ;
-	ParticleSystem() ;
+    ParticleSystem( int size = 500 ) ;
 
-	~ParticleSystem() ;
+    ~ParticleSystem() ;
 
 
 	int getSystemSize();
 
-    void setPosition(Vector3f location);
+    void setOriginPosition(Vector3f location);
 
-    Vector3f getPosition();
+    float getBlackHoleMagnitude();
+    Vector3f getBlackHoleCentre();
+
+    Plane getCollisionPlane();
+
+    void addBlackHoleCentreY(float value);
+    void addBlackHoleMagnitude(float value);
+
+    std::vector< Vector3f >& SystemForces();
+    std::vector< Vector3f > getSystemForces();
+
 
 	void VerletStep(int i);
 	void EulerStep(int i);
