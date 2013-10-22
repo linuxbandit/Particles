@@ -91,15 +91,7 @@ void setupScene(){
     glEnable(GL_NORMALIZE);
     glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_COLOR_MATERIAL); //enables the coloring of the material
-
-
-    // Generate GL texture ID & load texture
-
-    //glEnable(GL_TEXTURE_2D); //never mix texture with material; therefore I enable and disable it in the mainloop
-
-    //glBindTexture(GL_TEXTURE_2D, texture[2]);
-
+    glEnable(GL_COLOR_MATERIAL); glEnable(GL_COLOR_MATERIAL); //in this application we want user-defined colors. no materials
 
 
     //forces = std::vector<Vector>(2);
@@ -257,80 +249,40 @@ void Mouse(int b,int s,int x,int y)
 void renderScene(){
         
     // Clear framebuffer & depth buffer
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //where should the camera look at?
-	cameraTransform();
+    cameraTransform();
 
-	glDisable(GL_LIGHTING);//disable lighting not to affect the drawings of meta-objects
+    glDisable(GL_LIGHTING);//disable lighting not to affect the drawings of meta-objects
 
-	drawAxes();
-	
-	drawGrid();
-	
-	//fog();
+    drawAxes();
 
-    //cubeWorld();
+    drawGrid();
 
-    field.getCollisionPlane().draw(Vector3f(1,1,1));
+    glEnable(GL_LIGHTING);//resume lighting
 
-	glEnable(GL_LIGHTING);//resume lighting
+    //WITH = All the light will NOT move with the camera (light fixed even if i rotate)
+    //Because i tell at every frame to fix the light at those 2 points
+    glLightfv(GL_LIGHT0, GL_POSITION, left_light_position);
+    glLightfv(GL_LIGHT1, GL_POSITION, right_light_position);
+
+    glColor3f(0.5,0.5,0.5);
+
+    field.getCollisionPlane().draw(Vector3f(0.93, 0.82, 0)); //WTF only certain colors work. JK it's because number must be float.. then why tf there are some 255 every now and then (e.g. axes)
 
 
-	//WITH = All the light will NOT move with the camera (light fixed even if i rotate)
-	//Because i tell at every frame to fix the light at those 2 points
-	glLightfv(GL_LIGHT0, GL_POSITION, left_light_position);
-	glLightfv(GL_LIGHT1, GL_POSITION, right_light_position);
-
-	setMaterial(jade);
-	
-	glPushMatrix();
+    glPushMatrix();
     glTranslatef(field.getBlackHoleCentre().x,field.getBlackHoleCentre().y,field.getBlackHoleCentre().z);
-	glutSolidSphere(0.1f,4,4);
-	glPopMatrix();
+    glColor3f(0.7,0.5,0);
+    glutSolidSphere(0.1f,4,4);
+    glPopMatrix();
 
-    setMaterial(ruby);
-
-
-	glEnable(GL_BLEND);
-
-	glEnable(GL_TEXTURE_2D);
-	
-	glEnable(GL_TEXTURE_GEN_S);
-	glEnable(GL_TEXTURE_GEN_T);
-	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
-
-	glBindTexture(GL_TEXTURE_2D,texture[3]);
+    field.draw();
 
 
-
-	field.update();
-	field.draw();
-	//std::cout<< field.p[0]->position<<std::endl;//k
-	//std::cout<< field.p[0]->velocity<<std::endl;
-
-
-
-
-	glDisable(GL_TEXTURE_GEN_S);
-	glDisable(GL_TEXTURE_GEN_T);
-
-	setMaterial(plain);
-
-	glBindTexture(GL_TEXTURE_2D,texture[4]);
-	//objFile.Draw();
-	//roadroller->drawModel();
-
-	glDisable(GL_TEXTURE_2D);
-
-
-	/*
-	char str[70];
-	sprintf(str,"We know black holes resides\n at each galaxy's core");
-
-	writeOnScreen(str,30,30,640,480);
-	*/
+    //TODO pause button
+    field.update();
 	
 	glutSwapBuffers();
         

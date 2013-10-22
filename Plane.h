@@ -12,13 +12,13 @@
 #include "Vector3f.h"
 //#include "matrix.h"
 
-#include <vector>
+//#include <vector>
 
 
 class Plane
 {
 private:
-	
+
 
 public:
 
@@ -33,9 +33,9 @@ public:
     Plane();
     Plane(Vector3f v1,Vector3f v2, Vector3f v3, Vector3f v4) ;
 
-	//~Plane() ;	
+    //~Plane() ;
 
-    void draw(Vector3f color);
+    void draw(Vector3f colour);
 
     Vector3f findNormal(Vector3f v1,Vector3f v2, Vector3f v3);
 
@@ -46,7 +46,7 @@ public:
     float getDistance(Vector3f point);
 
     Vector3f getClosestPoint(Vector3f point);
-	
+
 };
 
 #endif

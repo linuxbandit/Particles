@@ -1,27 +1,19 @@
-//#include <stdlib.h>
+#include <stdlib.h>
 #include "ParticleSystem.h"
-
-#ifdef _WIN32
-#include <glut.h> // GLUT
-#endif
-
-#ifdef __gnu_linux__ // or __linux__ as well
-#include <GL/glut.h> // GLUT
-#endif
 
 #ifndef min
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
 #endif
 
 
-	ParticleSystem::~ParticleSystem()
-	{
-		//for (std::vector<Particle*> member = p.begin(); member != p.end(); member++) //iterators workkkkkk.........
+    ParticleSystem::~ParticleSystem()
+    {
+        //for (std::vector<Particle*> member = p.begin(); member != p.end(); member++) //iterators workkkkkk.........
         //  delete *member;
         for(unsigned int i=0; i<p.size(); i++)
-			delete p.at(i);
-		p.clear();
-	}
+            delete p.at(i);
+        p.clear();
+    }
 
     ParticleSystem::ParticleSystem(int size /*= 500*/):
         pointOrigin(Vector3f(0,5,0)),
@@ -70,50 +62,47 @@
     void ParticleSystem::addBlackHoleCentreY(float value) { blackHoleCentre.y += value; }
     void ParticleSystem::addBlackHoleMagnitude(float value) { blackHoleMagnitude += value; }
 
+
     std::vector< Vector3f >& ParticleSystem::SystemForces()    { return forces; }
     std::vector< Vector3f >  ParticleSystem::getSystemForces() { return forces; } //this is safe for reading
 
 
     // from http://www.xbdev.net/physics/Verlet/index.php
-//    void ParticleSystem::VerletStep(int i)
-//    {
-//        Compute_Forces(i);
-//Vector3f temp;
-//        temp = p[i]->position*2 - p[i]->previousPos + p[i]->appliedForce * (Vtimestep*Vtimestep);
-//        p[i]->position = temp;
-//        p[i]->previousPos = p[i]->position;
+    void ParticleSystem::VerletStep(int i)
+    {
+        Compute_Forces(i);
+        Vector3f newPos;
+        newPos = p[i]->getPosition()*2 - p[i]->getPrevPosition() + p[i]->getForce() * (Vtimestep*Vtimestep);
+        p[i]->setPrevPosition(p[i]->getPosition());
+        p[i]->setPosition(newPos);
 
-//        t += Vtimestep; /* update time */
-//    }
+        t += Vtimestep; /* update time */
+    }
 
-    //from Baraff's paper (very dispersive method..)
-	void ParticleSystem::EulerStep(int i)
-	{
-        Vector3f tempV, tempA, currX, currV; //used for Euler integration at each step
-		ParticleDerivative(i,tempV,tempA); /* get deriv */
-		ScaleVector(tempV,tempA); /* scale it */
-		ParticleGetState(i,currX,currV); /* get state */
-		AddVectors(currX,currV,tempV,tempA); /* add */
-		ParticleSetState(i,currX,currV); /* update state */
-		t += timestep; /* update time */
-	}
-
-    //from Fabrizio
+    //from Fabrizio (just less dispersive)
     void ParticleSystem::EulerStepFab(int i)
     {
         Vector3f tempV, tempA, currX, currV; //used for Euler integration at each step
         Compute_Forces(i); /* magic force function */
-           /* tempV = p[i]->velocity;
-            tempA = p[i]->appliedForce;
-            tempV *= timestep;
-            tempA *= timestep;
-            currX = p[i]->position;
-            currV = p[i]->velocity;
-            currX += tempV;
-            currV += tempA;
-            p[i]->position = currX;
-            p[i]->velocity = currV;*/
+        tempV = p[i]->getVelocity(); /* get deriv */
+        tempA = p[i]->getForce(); /* get deriv */
+            tempV *= timestep; /* scale it */
+            tempA *= timestep; /* scale it */
+            currX = p[i]->getPosition(); /* get state */
+            currV = p[i]->getVelocity(); /* get state */
+            currX += tempV; /* add */
+            currV += tempA; /* add */
+            p[i]->setPosition(currX); /* update state */
+            p[i]->setVelocity(currV); /* update state */
 
+        t += timestep; /* update time */
+    }
+
+    //lol this is funny
+    void ParticleSystem::FunnyStep(int i)
+    {
+        Vector3f tempV, tempA, currX, currV; //used for Euler integration at each step
+        Compute_Forces(i); /* magic force function */
             tempV.zero(); tempA.zero();
             tempV += p[i]->getVelocity();
             tempA += p[i]->getForce();
@@ -124,50 +113,22 @@
         t += timestep; /* update time */
     }
 
-	/* gather state from the particles into dst */
-    void ParticleSystem::ParticleGetState(int i, Vector3f &currX, Vector3f &currV){//temp2
-		//for(int i=0; i < p.size(); i++){
-        currX = p[i]->getPosition();
-        currV = p[i]->getVelocity();
-	}
 
-	/* scatter state from src into the particles */
-    void ParticleSystem::ParticleSetState(int i, Vector3f &currX, Vector3f &currV)
-	{
-        p[i]->setPosition(currX);
-        p[i]->setVelocity(currV);
-	}
+    void ParticleSystem::Compute_Forces(int i)
+    {
 
-	/* calculate derivative, place in dst */
-    void ParticleSystem::ParticleDerivative(int i, Vector3f &tempV, Vector3f &tempA)//temp1
-	{
-		//Clear_Forces(); /* zero the force accumulators */
-		Compute_Forces(i); /* magic force function */
-            tempV = p[i]->getVelocity(); /* xdot = v */
-            tempA = p[i]->getForce(); /* vdot = f/m */
-	}
-
-    //deprecated. I am not anymore scanning the whole array one time for zero and one time for using it..
-//	void ParticleSystem::Clear_Forces()
-//	{
-//        for(unsigned int i=0; i < p.size(); i++) p[i]->appliedForce.zero();
-//	}
-
-	void ParticleSystem::Compute_Forces(int i)
-	{
-
-			try {
+            try {
 
             //p.at(i)->setForce(vZero) ; //not needed anymore because I don't add to appliedForce *directly* anymore
             Vector3f tempForce(vZero);
 
-			//compute the vortex centre of gravity (in case I want fancy vortex)
-			//p[i]->appliedForce += blackHoleCentre - p[i]->position * blackHoleMagnitude * ( 1/p[i]->position.distanceSq(blackHoleCentre) ) ;
+            //compute the vortex centre of gravity (in case I want fancy vortex)
+            //p[i]->appliedForce += blackHoleCentre - p[i]->position * blackHoleMagnitude * ( 1/p[i]->position.distanceSq(blackHoleCentre) ) ;
 
-			//simms formula (adds another division by the distance)
+            //simms formula (adds another division by the distance)
             tempForce += (blackHoleCentre - p[i]->getPosition()) /
                                 ( (p[i]->getPosition().distanceSq(blackHoleCentre)) * (p[i]->getPosition().distanceSq(blackHoleCentre))// * (p[i]->getPosition.distanceSq(blackHoleCentre))
-								) * blackHoleMagnitude ;
+                                ) * blackHoleMagnitude ;
 
 
             for(unsigned int k=0; k < forces.size(); k++)
@@ -175,42 +136,29 @@
 
             p[i]->setForce(tempForce);//cheaper than adding in the for above as I access only once (I am talking about the access to the object, not to the array)
 
-			}catch (std::exception& e) {
-				std::cout << "Element " << i << ": index exceeds vector dimensions." << std::endl;
-			}
+            }catch (std::exception& e) {
+                std::cout << "Element " << i << ": index exceeds vector dimensions." << std::endl;
+            }
 
-	}
+    }
 
-    void ParticleSystem::ScaleVector(Vector3f &tempV, Vector3f &tempA) //damping?
-	{
-        tempV *= timestep;
-        tempA *= timestep;
-	}
-
-    void ParticleSystem::AddVectors(Vector3f &currX, Vector3f &currV,Vector3f &tempV, Vector3f &tempA)
-	{
-		currX += tempV;
-		currV += tempA;
-	}
 
     //scans the array to integrate & update particle by particle.
     //the particle's position is integrated with the integrator
     //of this class and then updated with the particle's update method
-	void ParticleSystem::update()
-	{
-		
+    void ParticleSystem::update()
+    {
+
         for(unsigned int i=0; i < p.size(); i++){
-            EulerStep(i); //integration; I expect the particles to move
+            EulerStepFab(i); //integration; I expect the particles to move
             //VerletStep(i);
-            //EulerStepFab(i);
             //p[i]->coolCollDet(planeNormal);
-            p[i]->update(collisionPlane); // I update their time (for death), the color (and size?) for evolution.
-		}
-        //checkParticlesLife(); //this routine should clearly be in update
-	}
+            p[i]->update(collisionPlane); // I update their time (for death), the color for evolution.
+        }
+    }
 
     //scans the particles array and calls their draw method
-	void ParticleSystem::draw()
-	{
+    void ParticleSystem::draw()
+    {
         for(unsigned int i=0; i < p.size(); i++)		p[i]->draw() ;
-	}
+    }

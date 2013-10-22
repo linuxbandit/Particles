@@ -1,6 +1,6 @@
 /*
     Vector class
-    © Keith O'Conor 2004
+    Â© Keith O'Conor 2004
     keith.oconor @ {cs.tcd.ie, gmail.com}
 
     modification by Fabrizio (added a method + renamed Vector3f)
@@ -11,6 +11,10 @@
 
 #include <math.h>
 #include <iostream>
+
+#ifndef PI
+#define PI 3.14159265
+#endif
 
 class Vector3f{
 public:
@@ -141,7 +145,7 @@ public:
 	}
 
     inline Vector3f crossProduct(const Vector3f &other) const{
-		//(x1,y1,z1)×(x2,y2,z2) = (y1z2-y2z1, x2z1-x1z2, x1y2-x2y1). 
+        //(x1,y1,z1) cross (x2,y2,z2) = (y1z2-y2z1, x2z1-x1z2, x1y2-x2y1).
         return Vector3f(
 			(y*other.z) - (z*other.y),
 			(z*other.x) - (x*other.z),
